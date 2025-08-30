@@ -34,7 +34,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    restart: unless-stopped
+    restart: "no"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

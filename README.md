@@ -162,3 +162,37 @@ curl http://localhost:8000/mcp/call_tool \
    ```bash
    curl http://localhost:11434/api/tags
    ```
+
+## Running Tests
+
+The test suite includes comprehensive tests for database operations, API endpoints, security, and LLM integration.
+
+### Prerequisites for Testing
+```bash
+pip install pytest
+```
+
+### Run All Tests
+```bash
+pytest tests/
+```
+
+### Run Specific Test Files
+```bash
+pytest tests/test_config.py          # Database configuration tests
+pytest tests/test_integration.py     # Full workflow integration tests  
+pytest tests/test_llm_service.py     # LLM service and LangChain tests
+pytest tests/test_mcp_routes.py      # MCP routes and schema tests
+pytest tests/test_security.py        # Security and SQL injection tests
+pytest tests/test_validation.py      # Input validation tests
+```
+
+### Run Tests with Verbose Output
+```bash
+pytest tests/ -v
+```
+
+### Run Tests with Coverage
+```bash
+pytest tests/ --cov=src
+```
