@@ -32,17 +32,20 @@ A clean, modular Flask application with PostgreSQL integration using MCP (Model 
 ## Quick Start (Docker - Recommended)
 
 ### 1. Configure Environment
+
 ```bash
 cp .env.example .env
 # Edit .env file with your settings if needed
 ```
 
 ### 2. Start the entire stack
+
 ```bash
 docker-compose up -d
 ```
 
 ### 3. Test the service
+
 ```bash
 curl http://localhost:8000/health
 ```
@@ -50,6 +53,7 @@ curl http://localhost:8000/health
 ## Manual Setup
 
 ### 1. Create Virtual Environment
+
 ```bash
 python -m venv venv
 .\venv\Scripts\activate  # Windows
@@ -57,22 +61,26 @@ python -m venv venv
 ```
 
 ### 2. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 3. Configure Environment
+
 ```bash
 cp .env.example .env
 # Edit .env file with your settings
 ```
 
 ### 4. Start PostgreSQL Container
+
 ```bash
 docker-compose up postgres -d
 ```
 
 ### 5. Run MCP Server
+
 ```bash
 python app.py
 ```
@@ -84,7 +92,7 @@ python app.py
 All configuration is handled through environment variables. See `.env.example` for all available options:
 
 - **Database**: PostgreSQL connection settings
-- **Ollama**: LLM model and endpoint configuration  
+- **Ollama**: LLM model and endpoint configuration
 - **Flask**: Server host, port, and debug settings
 - **Docker**: Container-specific overrides
 
@@ -93,8 +101,9 @@ The application uses **LangChain exclusively** for LLM interactions.
 ## MCP Tools
 
 The unified server provides these MCP tools:
+
 - `insert_user` - Create new user
-- `get_users` - Retrieve all users  
+- `get_users` - Retrieve all users
 - `get_user_by_id` - Get specific user
 - `update_user` - Update existing user
 - `delete_user` - Delete user
@@ -109,6 +118,7 @@ The unified server provides these MCP tools:
 ## Testing
 
 ### With cURL:
+
 ```bash
 # Health check
 curl http://localhost:8000/health
@@ -133,11 +143,13 @@ curl http://localhost:8000/mcp/call_tool \
 ```
 
 ### With Postman:
+
 1. **Health Check**: GET `http://localhost:8000/health`
 2. **List Tools**: GET `http://localhost:8000/mcp/tools`
 3. **Call Tool**: POST `http://localhost:8000/mcp/call_tool` with JSON body
 
 ### Example Tool Call Body:
+
 ```json
 {
   "name": "query_with_llm",
@@ -168,19 +180,22 @@ curl http://localhost:8000/mcp/call_tool \
 The test suite includes comprehensive tests for database operations, API endpoints, security, and LLM integration.
 
 ### Prerequisites for Testing
+
 ```bash
 pip install pytest
 ```
 
 ### Run All Tests
+
 ```bash
 pytest tests/
 ```
 
 ### Run Specific Test Files
+
 ```bash
 pytest tests/test_config.py          # Database configuration tests
-pytest tests/test_integration.py     # Full workflow integration tests  
+pytest tests/test_integration.py     # Full workflow integration tests
 pytest tests/test_llm_service.py     # LLM service and LangChain tests
 pytest tests/test_mcp_routes.py      # MCP routes and schema tests
 pytest tests/test_security.py        # Security and SQL injection tests
@@ -188,11 +203,7 @@ pytest tests/test_validation.py      # Input validation tests
 ```
 
 ### Run Tests with Verbose Output
+
 ```bash
 pytest tests/ -v
-```
-
-### Run Tests with Coverage
-```bash
-pytest tests/ --cov=src
 ```
