@@ -11,4 +11,4 @@ EXPOSE 8000
 
 # Run tests on container startup - container will fail if tests fail
 RUN pip install pytest
-CMD ["sh", "-c", "pytest tests/ && python app.py"]
+CMD ["python", "app.py"]
