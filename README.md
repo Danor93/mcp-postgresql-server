@@ -112,8 +112,38 @@ The unified server provides these MCP tools:
 ## API Endpoints
 
 - `GET /health` - Health check (shows mode and connections)
-- `GET /mcp/tools` - List available MCP tools
-- `POST /mcp/call_tool` - Execute MCP tool
+- `GET /mcp/tools` - List available MCP tools (requires auth)
+- `POST /mcp/call_tool` - Execute MCP tool (requires auth)
+- `POST /auth/login` - Generate authentication token
+- `GET /auth/verify` - Verify token validity
+
+## Authentication
+
+All MCP endpoints require JWT authentication. Use the following steps:
+
+### 1. Generate Token
+```bash
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "password"}'
+```
+
+Response:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {"id": 1, "username": "admin"}
+}
+```
+
+### 2. Use Token in Requests
+Add the token to the `Authorization` header:
+```bash
+curl -X POST http://localhost:8000/mcp/call_tool \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -d '{"name": "get_users", "arguments": {}}'
+```
 
 ## Testing
 
@@ -123,30 +153,49 @@ The unified server provides these MCP tools:
 # Health check
 curl http://localhost:8000/health
 
+# Get authentication token first
+TOKEN=$(curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "password"}' \
+  | jq -r .token)
+
 # List available tools
-curl http://localhost:8000/mcp/tools
+curl http://localhost:8000/mcp/tools \
+  -H "Authorization: Bearer $TOKEN"
 
 # Get all users
 curl http://localhost:8000/mcp/call_tool \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "get_users", "arguments": {}}'
 
 # Insert user
 curl http://localhost:8000/mcp/call_tool \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "insert_user", "arguments": {"username": "test_user", "email": "test@example.com", "first_name": "Test", "last_name": "User"}}'
 
 # Natural language query (requires Ollama)
 curl http://localhost:8000/mcp/call_tool \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"name": "query_with_llm", "arguments": {"query": "Show me all users"}}'
 ```
 
 ### With Postman:
 
-1. **Health Check**: GET `http://localhost:8000/health`
-2. **List Tools**: GET `http://localhost:8000/mcp/tools`
-3. **Call Tool**: POST `http://localhost:8000/mcp/call_tool` with JSON body
+1. **Get Token**: POST `http://localhost:8000/auth/login`
+   - Body: `{"username": "admin", "password": "password"}`
+   - Copy the `token` from response
+
+2. **Health Check**: GET `http://localhost:8000/health` (no auth required)
+
+3. **List Tools**: GET `http://localhost:8000/mcp/tools`
+   - Headers: `Authorization: Bearer YOUR_TOKEN`
+
+4. **Call Tool**: POST `http://localhost:8000/mcp/call_tool`
+   - Headers: `Authorization: Bearer YOUR_TOKEN`
+   - Body: JSON tool call
 
 ### Example Tool Call Body:
 

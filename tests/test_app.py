@@ -2,8 +2,16 @@ import pytest
 import json
 from unittest.mock import patch, MagicMock
 from app import app
+from src.middleware.auth import JWTAuth
 
 class TestFlaskApp:
+    
+    def get_auth_header(self):
+        """Helper to generate valid auth header for tests"""
+        with app.app_context():
+            auth = JWTAuth()
+            token = auth.generate_token(1, 'testuser')
+            return {'Authorization': f'Bearer {token}'}
     
     @patch('app.get_db_connection')
     @patch('app.query_ollama_langchain')
@@ -56,7 +64,8 @@ class TestFlaskApp:
     
     def test_list_tools(self, client):
         """Test MCP tools endpoint returns list of all available tools with correct count"""
-        response = client.get('/mcp/tools')
+        headers = self.get_auth_header()
+        response = client.get('/mcp/tools', headers=headers)
         
         assert response.status_code == 200
         data = json.loads(response.data)
@@ -72,9 +81,11 @@ class TestFlaskApp:
         
         test_data = {"name": "get_users", "arguments": {}}
         
+        headers = self.get_auth_header()
         response = client.post('/mcp/call_tool', 
                              data=json.dumps(test_data),
-                             content_type='application/json')
+                             content_type='application/json',
+                             headers=headers)
         
         assert response.status_code == 200
         data = json.loads(response.data)
@@ -84,9 +95,11 @@ class TestFlaskApp:
         """Test MCP call_tool endpoint returns 400 error for unknown tool names"""
         test_data = {"name": "unknown_tool", "arguments": {}}
         
+        headers = self.get_auth_header()
         response = client.post('/mcp/call_tool', 
                              data=json.dumps(test_data),
-                             content_type='application/json')
+                             content_type='application/json',
+                             headers=headers)
         
         assert response.status_code == 400
         data = json.loads(response.data)
