@@ -4,7 +4,7 @@ from marshmallow import Schema, fields, ValidationError
 import re
 
 class MCPToolCallSchema(Schema):
-    tool_name = fields.Str(required=True, validate=lambda x: len(x.strip()) > 0 and len(x) <= 100)
+    name = fields.Str(required=True, validate=lambda x: len(x.strip()) > 0 and len(x) <= 100)
     arguments = fields.Dict(required=False, missing={})
 
 def validate_json_input(schema_class):
