@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 from src.config.database import get_db_connection
 from src.routes.mcp_routes import get_mcp_tools, call_mcp_tool
 from src.services.llm_service import query_ollama_langchain
+from src.middleware.security import validate_json_input, MCPToolCallSchema, validate_sql_query_params
 
 app = Flask(__name__)
 
@@ -33,12 +34,14 @@ def health_check():
         return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
 
 @app.route('/mcp/tools', methods=['GET'])
+@validate_sql_query_params()
 def list_tools():
     return get_mcp_tools()
 
 @app.route('/mcp/call_tool', methods=['POST'])
+@validate_json_input(MCPToolCallSchema)
 def call_tool():
-    data = request.get_json()
+    data = request.validated_json
     return call_mcp_tool(data)
 
 if __name__ == '__main__':
