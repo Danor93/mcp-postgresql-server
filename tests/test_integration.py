@@ -1,8 +1,17 @@
 import pytest
 import json
 from unittest.mock import patch, MagicMock
+from app import app
+from src.middleware.auth import JWTAuth
 
 class TestIntegration:
+    
+    def get_auth_header(self):
+        """Helper to generate valid auth header for tests"""
+        with app.app_context():
+            auth = JWTAuth()
+            token = auth.generate_token(1, 'testuser')
+            return {'Authorization': f'Bearer {token}'}
     
     @patch('src.database.user_operations.get_db_connection')
     def test_full_user_crud_workflow(self, mock_get_db, client):
@@ -24,27 +33,28 @@ class TestIntegration:
             "name": "insert_user",
             "arguments": {"username": "testuser", "email": "test@example.com", "first_name": "Test", "last_name": "User"}
         }
-        response = client.post('/mcp/call_tool', data=json.dumps(insert_data), content_type='application/json')
+        headers = self.get_auth_header()
+        response = client.post('/mcp/call_tool', data=json.dumps(insert_data), content_type='application/json', headers=headers)
         assert response.status_code == 200
         
         # 2. Get all users
         get_all_data = {"name": "get_users", "arguments": {}}
-        response = client.post('/mcp/call_tool', data=json.dumps(get_all_data), content_type='application/json')
+        response = client.post('/mcp/call_tool', data=json.dumps(get_all_data), content_type='application/json', headers=headers)
         assert response.status_code == 200
         
         # 3. Get user by ID
         get_by_id_data = {"name": "get_user_by_id", "arguments": {"user_id": 1}}
-        response = client.post('/mcp/call_tool', data=json.dumps(get_by_id_data), content_type='application/json')
+        response = client.post('/mcp/call_tool', data=json.dumps(get_by_id_data), content_type='application/json', headers=headers)
         assert response.status_code == 200
         
         # 4. Update user
         update_data = {"name": "update_user", "arguments": {"user_id": 1, "first_name": "Updated"}}
-        response = client.post('/mcp/call_tool', data=json.dumps(update_data), content_type='application/json')
+        response = client.post('/mcp/call_tool', data=json.dumps(update_data), content_type='application/json', headers=headers)
         assert response.status_code == 200
         
         # 5. Delete user
         delete_data = {"name": "delete_user", "arguments": {"user_id": 1}}
-        response = client.post('/mcp/call_tool', data=json.dumps(delete_data), content_type='application/json')
+        response = client.post('/mcp/call_tool', data=json.dumps(delete_data), content_type='application/json', headers=headers)
         assert response.status_code == 200
     
     @patch('src.database.user_operations.get_db_connection')
@@ -58,7 +68,8 @@ class TestIntegration:
         mock_query_llm.return_value = "Found 1 user: John Doe"
         
         llm_data = {"name": "query_with_llm", "arguments": {"query": "How many users do we have?"}}
-        response = client.post('/mcp/call_tool', data=json.dumps(llm_data), content_type='application/json')
+        headers = self.get_auth_header()
+        response = client.post('/mcp/call_tool', data=json.dumps(llm_data), content_type='application/json', headers=headers)
         
         assert response.status_code == 200
         data = json.loads(response.data)
@@ -79,7 +90,8 @@ class TestIntegration:
         assert response.status_code == 200
         
         # Tools listing should work
-        response = client.get('/mcp/tools')
+        headers = self.get_auth_header()
+        response = client.get('/mcp/tools', headers=headers)
         assert response.status_code == 200
         
         data = json.loads(response.data)
@@ -87,16 +99,20 @@ class TestIntegration:
     
     def test_invalid_json_payload(self, client):
         """Test API endpoints handle invalid JSON payloads gracefully"""
+        headers = self.get_auth_header()
         response = client.post('/mcp/call_tool', 
                              data='invalid json',
-                             content_type='application/json')
+                             content_type='application/json',
+                             headers=headers)
         
         assert response.status_code == 400
     
     def test_missing_content_type(self, client):
         """Test API endpoints handle missing content-type header"""
+        headers = self.get_auth_header()
         response = client.post('/mcp/call_tool', 
-                             data='{"name": "get_users", "arguments": {}}')
+                             data='{"name": "get_users", "arguments": {}}',
+                             headers=headers)
         
         # Flask should handle this gracefully
         assert response.status_code in [400, 415]

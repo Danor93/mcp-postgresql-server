@@ -5,7 +5,7 @@ import re
 
 class MCPToolCallSchema(Schema):
     name = fields.Str(required=True, validate=lambda x: len(x.strip()) > 0 and len(x) <= 100)
-    arguments = fields.Dict(required=False, missing={})
+    arguments = fields.Dict(required=False, load_default={})
 
 def validate_json_input(schema_class):
     def decorator(f):

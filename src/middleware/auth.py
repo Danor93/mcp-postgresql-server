@@ -1,6 +1,6 @@
 import jwt
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from flask import request, jsonify, current_app
 
@@ -18,8 +18,8 @@ class JWTAuth:
         payload = {
             'user_id': user_id,
             'username': username,
-            'exp': datetime.utcnow() + timedelta(hours=current_app.config['JWT_EXPIRATION_HOURS']),
-            'iat': datetime.utcnow()
+            'exp': datetime.now(timezone.utc) + timedelta(hours=current_app.config['JWT_EXPIRATION_HOURS']),
+            'iat': datetime.now(timezone.utc)
         }
         return jwt.encode(payload, current_app.config['JWT_SECRET_KEY'], algorithm='HS256')
     
@@ -57,22 +57,3 @@ def require_auth(f):
     
     return decorated_function
 
-def optional_auth(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        auth_header = request.headers.get('Authorization')
-        request.current_user = None
-        
-        if auth_header:
-            try:
-                token = auth_header.split(' ')[1] if auth_header.startswith('Bearer ') else auth_header
-                auth = JWTAuth()
-                payload = auth.verify_token(token)
-                if payload:
-                    request.current_user = payload
-            except (IndexError, Exception):
-                pass
-        
-        return f(*args, **kwargs)
-    
-    return decorated_function
