@@ -1,4 +1,5 @@
 import os
+import json
 from langchain_ollama import OllamaLLM
 from flask import jsonify
 from src.database.user_operations import get_users_for_llm
@@ -29,19 +30,30 @@ Database content:
 {users_summary}
 
 Instructions:
-- Provide clear, well-formatted responses
-- Use proper spacing and indentation for readability
-- Do NOT use markdown code blocks (```) 
-- Do NOT include explanations or descriptions after the data
-- If returning JSON, format it cleanly with proper line breaks
-- Be concise and direct"""
+- Return data as JSON only, no explanations
+- For user data, format as an array of user objects with id, username, email, and name fields
+- Do NOT group data by columns (avoid arrays of IDs, arrays of usernames, etc.)
+- Each user should be a complete object: {{"id": 1, "username": "john_doe", "email": "john@example.com", "name": "John Doe"}}
+- Do NOT use markdown code blocks (```)
+- Return only valid JSON"""
         
         llm_response = query_llm(prompt)
-        return jsonify({
-            'success': True, 
-            'llm_response': llm_response,
-            'mode': 'langchain'
-        })
+        
+        # Try to parse the LLM response as JSON
+        try:
+            parsed_response = json.loads(llm_response)
+            return jsonify({
+                'success': True,
+                'data': parsed_response,
+                'mode': 'langchain'
+            })
+        except json.JSONDecodeError:
+            # If it's not valid JSON, return as text
+            return jsonify({
+                'success': True,
+                'llm_response': llm_response,
+                'mode': 'langchain'
+            })
         
     except Exception as e:
         return jsonify({'error': f'Error querying with LLM: {str(e)}'}), 500
