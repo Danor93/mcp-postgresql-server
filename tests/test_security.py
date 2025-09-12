@@ -1,3 +1,31 @@
+"""
+Security and Null Handling Tests - Specialized Unit Tests
+
+These specialized unit tests focus on security aspects and null value handling
+in the database operations. They are unit tests with a specific focus on
+security vulnerabilities, data validation, and edge cases that could lead
+to security issues or system failures.
+
+Run these tests with:
+    pytest tests/test_security.py -v
+    pytest -m security
+    pytest -m "unit and security"
+
+What makes these Security-focused Unit Tests:
+    - Test handling of NULL values and edge cases
+    - Verify protection against SQL injection attempts
+    - Test error handling that could expose sensitive information
+    - Focus on data validation and sanitization
+    - Verify secure handling of user input
+
+Key Security Testing Patterns:
+    - Test NULL value handling to prevent null pointer exceptions
+    - Verify proper error messages (no sensitive data exposure)
+    - Test edge cases that could cause security issues
+    - Mock database responses to simulate various scenarios
+    - Focus on input validation and output sanitization
+"""
+
 import pytest
 import json
 from unittest.mock import patch, MagicMock
@@ -5,6 +33,9 @@ import psycopg2
 from src.routes.mcp_routes import call_mcp_tool
 from src.database.user_operations import insert_user, get_user_by_id, update_user
 
+
+@pytest.mark.unit
+@pytest.mark.security
 class TestSecurityAndNullHandling:
     
     @patch('src.database.user_operations.get_db_connection')

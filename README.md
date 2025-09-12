@@ -17,13 +17,18 @@ A clean, modular Flask application with PostgreSQL integration using MCP (Model 
 │   ├── database/
 │   │   ├── user_operations.py   # User CRUD operations
 │   │   └── init.sql             # Database initialization
+│   ├── middleware/
+│   │   ├── auth.py              # JWT authentication
+│   │   ├── rate_limiter.py      # Rate limiting middleware
+│   │   └── security.py          # Security middleware
 │   ├── services/
 │   │   └── llm_service.py       # LangChain LLM service
 │   └── routes/
+│       ├── auth_routes.py       # Authentication endpoints
 │       └── mcp_routes.py        # MCP tool definitions and routing
+├── tests/                       # Comprehensive test suite (72 tests)
 ├── app.py                       # Main Flask application
-├── .env                         # Environment variables (create from .env.example)
-├── .env.example                 # Environment variables template
+├── pytest.ini                  # Test configuration
 ├── requirements.txt             # Python dependencies
 ├── docker-compose.yml           # Docker configuration
 └── Dockerfile                   # Container build instructions
@@ -122,6 +127,7 @@ The unified server provides these MCP tools:
 All MCP endpoints require JWT authentication. Use the following steps:
 
 ### 1. Generate Token
+
 ```bash
 curl -X POST http://localhost:8000/auth/login \
   -H "Content-Type: application/json" \
@@ -129,15 +135,18 @@ curl -X POST http://localhost:8000/auth/login \
 ```
 
 Response:
+
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {"id": 1, "username": "admin"}
+  "user": { "id": 1, "username": "admin" }
 }
 ```
 
 ### 2. Use Token in Requests
+
 Add the token to the `Authorization` header:
+
 ```bash
 curl -X POST http://localhost:8000/mcp/call_tool \
   -H "Content-Type: application/json" \
@@ -185,12 +194,14 @@ curl http://localhost:8000/mcp/call_tool \
 ### With Postman:
 
 1. **Get Token**: POST `http://localhost:8000/auth/login`
+
    - Body: `{"username": "admin", "password": "password"}`
    - Copy the `token` from response
 
 2. **Health Check**: GET `http://localhost:8000/health` (no auth required)
 
 3. **List Tools**: GET `http://localhost:8000/mcp/tools`
+
    - Headers: `Authorization: Bearer YOUR_TOKEN`
 
 4. **Call Tool**: POST `http://localhost:8000/mcp/call_tool`
@@ -226,33 +237,28 @@ curl http://localhost:8000/mcp/call_tool \
 
 ## Running Tests
 
-The test suite includes comprehensive tests for database operations, API endpoints, security, and LLM integration.
-
-### Prerequisites for Testing
+### Local Tests
 
 ```bash
-pip install pytest
+# Run all tests
+python -m pytest tests/
+
+# Run with verbose output
+python -m pytest tests/ -v
+
+# Run specific test categories
+python -m pytest -m sanity     # Quick health checks
+python -m pytest -m unit       # Unit tests
+python -m pytest -m integration # Integration tests
+python -m pytest -m e2e        # End-to-end tests
 ```
 
-### Run All Tests
+### Docker Tests
 
 ```bash
-pytest tests/
-```
+# Run tests in Docker container
+docker run --rm mcp-postgresql-server python -m pytest tests/
 
-### Run Specific Test Files
-
-```bash
-pytest tests/test_config.py          # Database configuration tests
-pytest tests/test_integration.py     # Full workflow integration tests
-pytest tests/test_llm_service.py     # LLM service and LangChain tests
-pytest tests/test_mcp_routes.py      # MCP routes and schema tests
-pytest tests/test_security.py        # Security and SQL injection tests
-pytest tests/test_validation.py      # Input validation tests
-```
-
-### Run Tests with Verbose Output
-
-```bash
-pytest tests/ -v
+# Run with verbose output
+docker run --rm mcp-postgresql-server python -m pytest tests/ -v
 ```
