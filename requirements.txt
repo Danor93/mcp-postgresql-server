@@ -11,3 +11,12 @@ marshmallow==3.21.3
 flask-limiter==3.8.0
 pyjwt==2.9.0
 flask-cors==5.0.0
+
+# Additional testing dependencies for comprehensive test suite
+pytest-xdist==3.6.1         # Parallel test execution
+pytest-timeout==2.3.1       # Test timeout functionality
+pytest-cov==5.0.0          # Code coverage reporting
+pytest-asyncio==0.23.8     # Async test support
+responses==0.25.3          # HTTP mocking
+faker==26.0.0              # Test data generation
+freezegun==1.5.1           # Time mocking for tests
